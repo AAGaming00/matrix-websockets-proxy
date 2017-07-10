@@ -23,7 +23,7 @@ import (
 	"runtime"
 
 	"github.com/gorilla/websocket"
-	"./proxy"
+	"github.com/krombel/matrix-websockets-proxy/proxy"
 )
 
 var compress = flag.Bool("compress", false, "Enable compression of the WebSocket-Connection with per-message-deflate")
