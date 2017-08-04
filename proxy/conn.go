@@ -18,8 +18,11 @@ const (
 	// Send pings to peer with this period. Must be less than pongWait.
 	pingPeriod = (pongWait * 9) / 10
 
-	// Maximum message size allowed from peer.
-	maxMessageBytes = 4096
+	/* Maximum message size allowed from peer.
+	 * http://matrix.org/docs/spec/client_server/r0.2.0.html#size-limits
+	 * + 150 as rule of thumb for the overhead introduced by WebSocketAPI
+	 */
+	maxMessageBytes = 65536 + 150
 )
 
 type message struct {
