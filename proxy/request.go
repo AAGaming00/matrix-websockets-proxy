@@ -29,6 +29,7 @@ type requestHandler func(req *jsonRequest, client *MatrixClient) (resultObj, *Ma
 
 var handlerMap = map[string]requestHandler{
 	"ping":         handlePing,
+	"presence":     handlePresence,
 	"read_markers": handleReadMarkers,
 	"send":         handleSend,
 	"state":        handleState,
@@ -91,15 +92,61 @@ func handlePing(req *jsonRequest, _ *MatrixClient) (resultObj, *MatrixErrorDetai
 	return &struct{}{}, nil
 }
 
+func handlePresence(req *jsonRequest, client *MatrixClient) (resultObj, *MatrixErrorDetails) {
+	type PresenceRequest struct {
+		Presence  string `json:"presence"`
+		StatusMsg int    `json:"status_msg,omitempty"`
+	}
+
+	var presenceParams PresenceRequest
+	if err := json.Unmarshal(*req.Params, &presenceParams); err != nil {
+		log.Println("Invalid request:", err)
+		return nil, errorToResponse(err)
+	}
+
+	if presenceParams.Presence == "" {
+		return nil, &MatrixErrorDetails{
+			ErrCode: "M_BAD_JSON",
+			Error:   "Missing presence",
+		}
+	}
+
+	if _, err := client.UpdatePresence(presenceParams.Presence); err != nil {
+		return nil, err
+	}
+
+	content := PresenceRequest{
+		Presence:  presenceParams.Presence,
+		StatusMsg: presenceParams.StatusMsg,
+	}
+
+	jsonContent, err := json.Marshal(&content)
+	if err != nil {
+		return nil, &MatrixErrorDetails{
+			ErrCode: "M_BAD_JSON",
+			Error:   "Intermediate content not parseable",
+		}
+
+	}
+	_, err = client.SendPresence(jsonContent)
+
+	if err != nil {
+		return nil, errorToResponse(err)
+	}
+
+	return &struct{}{}, nil
+
+}
+
 func handleReadMarkers(req *jsonRequest, client *MatrixClient) (resultObj, *MatrixErrorDetails) {
 	type ReadMarkerRequest struct {
-		Room_ID    string `json:"room_id"`
-		FullyRead  string `json:"m.fully_read,omitempty"`
-		Read       string `json:"m.read,omitempty"`
+		Room_ID   string `json:"room_id"`
+		FullyRead string `json:"m.fully_read,omitempty"`
+		Read      string `json:"m.read,omitempty"`
 	}
 	type ReadMarkerUpstreamRequest struct {
-		FullyRead  string `json:"m.fully_read,omitempty"`
-		Read       string `json:"m.read,omitempty"`
+		FullyRead string `json:"m.fully_read,omitempty"`
+		Read      string `json:"m.read,omitempty"`
 	}
 
 	var readMarkerParams ReadMarkerRequest
@@ -124,7 +171,7 @@ func handleReadMarkers(req *jsonRequest, client *MatrixClient) (resultObj, *Matr
 
 	jsonContent, err := json.Marshal(ReadMarkerUpstreamRequest{
 		FullyRead: readMarkerParams.FullyRead,
-		Read: readMarkerParams.Read,
+		Read:      readMarkerParams.Read,
 	})
 
 	if err != nil {
@@ -246,9 +293,9 @@ func handleState(req *jsonRequest, client *MatrixClient) (resultObj, *MatrixErro
 
 func handleTyping(req *jsonRequest, client *MatrixClient) (resultObj, *MatrixErrorDetails) {
 	type TypingRequest struct {
-		Room_ID    string `json:"room_id"`
-		Typing     bool   `json:"typing"`
-		Timeout    int    `json:"timeout,omitempty"`
+		Room_ID string `json:"room_id"`
+		Typing  bool   `json:"typing"`
+		Timeout int    `json:"timeout,omitempty"`
 	}
 
 	var typingParams TypingRequest
@@ -266,9 +313,9 @@ func handleTyping(req *jsonRequest, client *MatrixClient) (resultObj, *MatrixErr
 
 	content := TypingRequest{
 		Room_ID: typingParams.Room_ID,
-		Typing: typingParams.Typing,
+		Typing:  typingParams.Typing,
 	}
-	if (typingParams.Typing && typingParams.Timeout != 0) {
+	if typingParams.Typing && typingParams.Timeout != 0 {
 		content.Timeout = typingParams.Timeout
 	}
 

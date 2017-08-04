@@ -27,6 +27,7 @@ type MatrixClient struct {
 	url string
 
 	Filter        string
+	Presence      string
 	NextSyncBatch string
 
 	// our client for the upstream connection
@@ -87,13 +88,13 @@ func (s *MatrixClient) GetUserId() (string, error) {
 	type Condition struct {
 		Key     string
 		Pattern string
-	//	Kind    string
+		// Kind string
 	}
 	type PushRuleResponse struct {
-	//	Rule_ID    string
-	//	Default    bool
-	//	Enabled    bool
-                Conditions []Condition
+		// Rule_ID string
+		// Default bool
+		// Enabled bool
+		Conditions []Condition
 	}
 
 	var response PushRuleResponse
@@ -109,6 +110,27 @@ func (s *MatrixClient) GetUserId() (string, error) {
 		}
 	}
 	return "", fmt.Errorf("Error finding state_key in push-rule-conditions (for UserId)")
+}
+
+func (s *MatrixClient) UpdatePresence(newPresence string) (string, *MatrixErrorDetails) {
+	allowedPresenceTypes := [3]string{"online", "offline", "unavailable"}
+
+	found := false
+	for _, val := range allowedPresenceTypes {
+		if val == newPresence {
+			found = true
+			break
+		}
+	}
+	if found {
+		s.Presence = newPresence
+		return s.Presence, nil
+	} else {
+		return s.Presence, &MatrixErrorDetails{
+			ErrCode: "M_BAD_JSON",
+			Error:   "Given presence not allowed",
+		}
+	}
 }
 
 // Sync sends the sync request, and returns the body of the response,
@@ -134,11 +156,14 @@ func (s *MatrixClient) Sync(waitForEvents bool) ([]byte, error) {
 		"access_token": {s.AccessToken},
 		"timeout":      {fmt.Sprintf("%d", timeout/time.Millisecond)},
 	}
-	if s.NextSyncBatch != "" {
-		params.Set("since", s.NextSyncBatch)
-	}
 	if s.Filter != "" {
 		params.Set("filter", s.Filter)
+	}
+	if s.Presence != "" {
+		params.Set("presence", s.Presence)
+	}
+	if s.NextSyncBatch != "" {
+		params.Set("since", s.NextSyncBatch)
 	}
 
 	body, err := s.get("_matrix/client/r0/sync", params)
@@ -178,6 +203,28 @@ func extractNextBatch(httpBody []byte) (string, error) {
 func (s *MatrixClient) SendMessage(roomID string, eventType string,
 	txnID string, content []byte) (string, error) {
 	return s.sendMessageOrState(false, roomID, eventType, txnID, content)
+}
+
+func (s *MatrixClient) SendPresence(content []byte) ([]byte, error) {
+	userID, err := s.GetUserId()
+	if err != nil {
+		return nil, err
+	}
+
+	path := fmt.Sprintf("_matrix/client/r0/presence/%s/status",
+		url.QueryEscape(userID))
+
+	params := url.Values{
+		"access_token": {s.AccessToken},
+	}
+
+	resp, err := s.do("PUT", path, params, content)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 func (s *MatrixClient) SendReadMarkers(roomID string, content []byte) ([]byte, error) {
@@ -222,7 +269,7 @@ func (s *MatrixClient) SendTyping(roomID string, content []byte) ([]byte, error)
 		if err.(*MatrixError).HttpError.StatusCode == 429 {
 			// Message got blocked because of rate-limiting
 			// => ignore it (TODO is this intended?)
-			log.Println("SendTyping got rate-limited: ignore");
+			log.Println("SendTyping got rate-limited: ignore")
 			return []byte("{}"), nil
 		}
 		return nil, err

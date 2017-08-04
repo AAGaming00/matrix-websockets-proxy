@@ -71,6 +71,7 @@ func serveStream(w http.ResponseWriter, r *http.Request) {
 	client := proxy.NewClient(*upstreamURL, accessToken)
 	client.NextSyncBatch = r.URL.Query().Get("since")
 	client.Filter = r.URL.Query().Get("filter")
+	client.UpdatePresence(r.URL.Query().Get("presence"))
 
 	msg, err := client.Sync(false)
 	if err != nil {
