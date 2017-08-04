@@ -34,7 +34,7 @@ Currently there exists one reference implementation to use this proxy. Use my fo
 ### nginx-integration
 To make this work you can integrate this proxy using nginx as follows:
 ```
-        location /_matrix/client/unstable/stream {
+        location /_matrix/client/ws/r0 {
                 proxy_pass http://127.0.0.1:8009/stream;
                 proxy_http_version 1.1;
                 proxy_set_header Upgrade $http_upgrade;
