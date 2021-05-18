@@ -22,8 +22,9 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"matrix-websockets-proxy/proxy"
+
 	"github.com/gorilla/websocket"
-	"github.com/krombel/matrix-websockets-proxy/proxy"
 )
 
 var compress = flag.Bool("compress", false, "Enable compression of the WebSocket-Connection with per-message-deflate")
@@ -89,7 +90,7 @@ func serveStream(w http.ResponseWriter, r *http.Request) {
 
 	upgrader := websocket.Upgrader{
 		EnableCompression: *compress,
-		Subprotocols: []string{"m.json"},
+		Subprotocols:      []string{"m.json"},
 	}
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
