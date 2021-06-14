@@ -77,9 +77,7 @@ func (s *MatrixClient) GetUserId() (string, error) {
 	// i know it is hacky but this was the only way I found to determine the user-id via
 	// Client-Server-API with just access-token provided
 
-	params := url.Values{
-		"access_token": {s.AccessToken},
-	}
+	params := url.Values{}
 	resp, err := s.get("_matrix/client/r0/pushrules/global/override/.m.rule.invite_for_me", params)
 	if err != nil {
 		return "", fmt.Errorf("Error while fetching data to determine user-id")
@@ -153,8 +151,7 @@ func (s *MatrixClient) Sync(waitForEvents bool) ([]byte, error) {
 		timeout = 0
 	}
 	params := url.Values{
-		"access_token": {s.AccessToken},
-		"timeout":      {fmt.Sprintf("%d", timeout/time.Millisecond)},
+		"timeout": {fmt.Sprintf("%d", timeout/time.Millisecond)},
 	}
 	if s.Filter != "" {
 		params.Set("filter", s.Filter)
@@ -214,9 +211,7 @@ func (s *MatrixClient) SendPresence(content []byte) ([]byte, error) {
 	path := fmt.Sprintf("_matrix/client/r0/presence/%s/status",
 		url.QueryEscape(userID))
 
-	params := url.Values{
-		"access_token": {s.AccessToken},
-	}
+	params := url.Values{}
 
 	resp, err := s.do("PUT", path, params, content)
 
@@ -231,9 +226,7 @@ func (s *MatrixClient) SendReadMarkers(roomID string, content []byte) ([]byte, e
 	path := fmt.Sprintf("_matrix/client/r0/rooms/%s/read_markers",
 		url.QueryEscape(roomID))
 
-	params := url.Values{
-		"access_token": {s.AccessToken},
-	}
+	params := url.Values{}
 
 	resp, err := s.do("POST", path, params, content)
 
@@ -259,9 +252,7 @@ func (s *MatrixClient) SendTyping(roomID string, content []byte) ([]byte, error)
 		url.QueryEscape(roomID),
 		url.QueryEscape(userID))
 
-	params := url.Values{
-		"access_token": {s.AccessToken},
-	}
+	params := url.Values{}
 
 	resp, err := s.do("PUT", path, params, content)
 
@@ -294,9 +285,7 @@ func (s *MatrixClient) sendMessageOrState(state bool,
 		url.QueryEscape(eventType),
 		url.QueryEscape(key))
 
-	params := url.Values{
-		"access_token": {s.AccessToken},
-	}
+	params := url.Values{}
 	resp, err := s.do("PUT", path, params, content)
 
 	if err != nil {
@@ -340,6 +329,7 @@ func (s *MatrixClient) do(method string, path string, queryParams url.Values, bo
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+s.AccessToken)
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
