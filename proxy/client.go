@@ -224,7 +224,7 @@ func (s *MatrixClient) SendPresence(content []byte) ([]byte, error) {
 
 func (s *MatrixClient) SendReadMarkers(roomID string, content []byte) ([]byte, error) {
 	path := fmt.Sprintf("_matrix/client/r0/rooms/%s/read_markers",
-		url.QueryEscape(roomID))
+		strings.ReplaceAll(url.QueryEscape(roomID), "%21", "!"))
 
 	params := url.Values{}
 
@@ -249,7 +249,7 @@ func (s *MatrixClient) SendTyping(roomID string, content []byte) ([]byte, error)
 	}
 
 	path := fmt.Sprintf("_matrix/client/r0/rooms/%s/typing/%s",
-		url.QueryEscape(roomID),
+		strings.ReplaceAll(url.QueryEscape(roomID), "%21", "!"),
 		url.QueryEscape(userID))
 
 	params := url.Values{}
