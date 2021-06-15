@@ -60,7 +60,7 @@ func TestExtractNextBatchErrors(t *testing.T) {
 
 // request to an invalid URL
 func TestUrlError(t *testing.T) {
-	client := NewClient("", "")
+	client := NewClient("", "", "")
 	resp, err := client.do("GET", "abc", nil, nil)
 	if resp != nil {
 		t.Error("Expected no response; got", string(resp))
@@ -83,7 +83,7 @@ func TestHttpError(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	client := NewClient(ts.URL, "")
+	client := NewClient(ts.URL, ts.URL, "")
 	resp, err := client.do("GET", "abc", nil, nil)
 	if resp != nil {
 		t.Error("Expected no response; got", string(resp))
@@ -118,7 +118,7 @@ func TestMatrixError(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	client := NewClient(ts.URL, "")
+	client := NewClient(ts.URL, ts.URL, "")
 	resp, err := client.do("GET", "abc", nil, nil)
 	if resp != nil {
 		t.Error("Expected no response; got", string(resp))
@@ -153,7 +153,7 @@ func TestSend(t *testing.T) {
 	ts := newTestServer(t, wantPath, respjson)
 	defer ts.Close()
 
-	client := NewClient(ts.URL, "ACCESS TOKEN")
+	client := NewClient(ts.URL, ts.URL, "ACCESS TOKEN")
 	eventID, err := client.SendMessage("ROOM_ID", "EVENT_TYPE", "TXN_ID",
 		[]byte("CONTENT"))
 
@@ -173,7 +173,7 @@ func TestState(t *testing.T) {
 	ts := newTestServer(t, wantpath, respjson)
 	defer ts.Close()
 
-	client := NewClient(ts.URL, "ACCESS TOKEN")
+	client := NewClient(ts.URL, ts.URL, "ACCESS TOKEN")
 	eventID, err := client.SendState("ROOM_ID", "EVENT_TYPE", "STATE_KEY",
 		[]byte("CONTENT"))
 

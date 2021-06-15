@@ -124,7 +124,7 @@ func TestSendRequest(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	client := NewClient(ts.URL, "ACCESS TOKEN")
+	client := NewClient(ts.URL, ts.URL, "ACCESS TOKEN")
 
 	req := `{"id": "1234", "method": "send", "params": {
 		"room_id": "ROOM_ID", "content": {}, "event_type": "EVENT_TYPE"}}`

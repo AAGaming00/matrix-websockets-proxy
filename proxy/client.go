@@ -24,7 +24,8 @@ type MatrixClient struct {
 	UserId      string
 
 	// base-url for requests (e.g. "http//localhost:8008")
-	url string
+	url      string
+	eventUrl string
 
 	Filter        string
 	Presence      string
@@ -34,11 +35,11 @@ type MatrixClient struct {
 	httpClient http.Client
 }
 
-func NewClient(url string, accessToken string) *MatrixClient {
+func NewClient(url string, eventUrl string, accessToken string) *MatrixClient {
 	if !strings.HasSuffix(url, "/") {
 		url += "/"
 	}
-	return &MatrixClient{url: url, AccessToken: accessToken}
+	return &MatrixClient{url: url, AccessToken: accessToken, eventUrl: eventUrl}
 }
 
 // an error returned when a matrix endpoint returns a non-200 whose body is
@@ -254,7 +255,7 @@ func (s *MatrixClient) SendTyping(roomID string, content []byte) ([]byte, error)
 
 	params := url.Values{}
 
-	resp, err := s.do("PUT", path, params, content)
+	resp, err := s.do("PUT", path, params, content, true)
 
 	if err != nil {
 		if err.(*MatrixError).HttpError.StatusCode == 429 {
@@ -313,8 +314,13 @@ var accessTokenRegexp = regexp.MustCompile("(access_token=)[^&]+")
 //
 // It checks the response code, and if it isn't a 200, returns a MatrixError or
 // HttpError
-func (s *MatrixClient) do(method string, path string, queryParams url.Values, body []byte) ([]byte, error) {
-	url := s.url + path
+func (s *MatrixClient) do(method string, path string, queryParams url.Values, body []byte, isEvent bool) ([]byte, error) {
+	url := ""
+	if isEvent {
+		url = s.eventUrl + path
+	} else {
+		url = s.url + path
+	}
 
 	if queryParams != nil {
 		url += "?" + queryParams.Encode()

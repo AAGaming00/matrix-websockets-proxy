@@ -30,6 +30,7 @@ import (
 var compress = flag.Bool("compress", false, "Enable compression of the WebSocket-Connection with per-message-deflate")
 var port = flag.Int("port", 8009, "TCP port to listen on")
 var upstreamURL = flag.String("upstream", "http://localhost:8008/", "URL of upstream server")
+var eventStream = flag.String("event", "http://localhost:8008/", "URL of event stream server")
 var testHTML *string
 
 func init() {
@@ -69,7 +70,7 @@ func serveStream(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Println("Recognized AccessToken: " + accessToken)
 
-	client := proxy.NewClient(*upstreamURL, accessToken)
+	client := proxy.NewClient(*upstreamURL, *eventStream, accessToken)
 	client.NextSyncBatch = r.URL.Query().Get("since")
 	client.Filter = r.URL.Query().Get("filter")
 	client.UpdatePresence(r.URL.Query().Get("presence"))
