@@ -214,7 +214,7 @@ func (s *MatrixClient) SendPresence(content []byte) ([]byte, error) {
 
 	params := url.Values{}
 
-	resp, err := s.do("PUT", path, params, content)
+	resp, err := s.do("PUT", path, params, content, true)
 
 	if err != nil {
 		return nil, err
@@ -229,7 +229,7 @@ func (s *MatrixClient) SendReadMarkers(roomID string, content []byte) ([]byte, e
 
 	params := url.Values{}
 
-	resp, err := s.do("POST", path, params, content)
+	resp, err := s.do("POST", path, params, content, true)
 
 	if err != nil {
 		return nil, err
@@ -287,7 +287,7 @@ func (s *MatrixClient) sendMessageOrState(state bool,
 		url.QueryEscape(key))
 
 	params := url.Values{}
-	resp, err := s.do("PUT", path, params, content)
+	resp, err := s.do("PUT", path, params, content, false)
 
 	if err != nil {
 		return "", err
@@ -305,7 +305,7 @@ func (s *MatrixClient) sendMessageOrState(state bool,
 // It checks the response code, and if it isn't a 200, returns an HttpError or
 // MatrixError.
 func (s *MatrixClient) get(path string, queryParams url.Values) ([]byte, error) {
-	return s.do("GET", path, queryParams, nil)
+	return s.do("GET", path, queryParams, nil, false)
 }
 
 var accessTokenRegexp = regexp.MustCompile("(access_token=)[^&]+")
