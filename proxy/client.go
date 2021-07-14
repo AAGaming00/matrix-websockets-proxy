@@ -245,9 +245,9 @@ func (s *MatrixClient) SendRedaction(roomID string,
 	}
 
 	path := fmt.Sprintf("_matrix/client/r0/rooms/%s/redact/%s/%s",
-		url.QueryEscape(roomID),
-		url.QueryEscape(redacts),
-		url.QueryEscape(txnID))
+		roomID,
+		redacts,
+		txnID)
 
 	params := url.Values{}
 	resp, err := s.do("PUT", path, params, nil, false)
