@@ -238,6 +238,32 @@ func (s *MatrixClient) SendReadMarkers(roomID string, content []byte) ([]byte, e
 	return resp, nil
 }
 
+func (s *MatrixClient) SendRedaction(roomID string,
+	eventType string, txnID string, redacts string) (string, error) {
+	type Response struct {
+		Event_ID string
+	}
+
+	path := fmt.Sprintf("_matrix/client/r0/rooms/%s/%s/%s/%s",
+		url.QueryEscape(roomID),
+		eventType,
+		url.QueryEscape(redacts),
+		url.QueryEscape(txnID))
+
+	params := url.Values{}
+	resp, err := s.do("PUT", path, params, nil, false)
+
+	if err != nil {
+		return "", err
+	}
+
+	var sr Response
+	if err := json.Unmarshal(resp, &sr); err != nil {
+		return "", err
+	}
+	return sr.Event_ID, nil
+}
+
 func (s *MatrixClient) SendState(roomID string, eventType string,
 	stateKey string, content []byte) (string, error) {
 	return s.sendMessageOrState(true, roomID, eventType, stateKey, content)

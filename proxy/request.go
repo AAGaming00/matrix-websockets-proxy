@@ -31,6 +31,7 @@ var handlerMap = map[string]requestHandler{
 	"ping":         handlePing,
 	"presence":     handlePresence,
 	"read_markers": handleReadMarkers,
+	"redact":       handleRedaction,
 	"send":         handleSend,
 	"state":        handleState,
 	"typing":       handleTyping,
@@ -187,6 +188,60 @@ func handleReadMarkers(req *jsonRequest, client *MatrixClient) (resultObj, *Matr
 	}
 
 	return &struct{}{}, nil
+}
+
+func handleRedaction(req *jsonRequest, client *MatrixClient) (resultObj, *MatrixErrorDetails) {
+	type RedactRequest struct {
+		Room_ID    string
+		Event_Type string
+		Redacts    string
+	}
+	type RedactResponse struct {
+		EventID string `json:"event_id"`
+	}
+
+	if req.ID == nil {
+		return nil, &MatrixErrorDetails{
+			ErrCode: "M_BAD_JSON",
+			Error:   "Missing request ID",
+		}
+	}
+
+	var redactParams RedactRequest
+	if err := json.Unmarshal(*req.Params, &redactParams); err != nil {
+		log.Println("Invalid request:", err)
+		return nil, errorToResponse(err)
+	}
+
+	if redactParams.Room_ID == "" {
+		return nil, &MatrixErrorDetails{
+			ErrCode: "M_BAD_JSON",
+			Error:   "Missing room_id",
+		}
+	}
+
+	if redactParams.Event_Type == "" {
+		return nil, &MatrixErrorDetails{
+			ErrCode: "M_BAD_JSON",
+			Error:   "Missing event_type",
+		}
+	}
+
+	if redactParams.Redacts == "" {
+		return nil, &MatrixErrorDetails{
+			ErrCode: "M_BAD_JSON",
+			Error:   "Missing redacts",
+		}
+	}
+
+	event_id, err := client.SendRedaction(redactParams.Room_ID, redactParams.Event_Type, *req.ID,
+		redactParams.Redacts)
+
+	if err != nil {
+		return nil, errorToResponse(err)
+	}
+
+	return &RedactResponse{EventID: event_id}, nil
 }
 
 func handleSend(req *jsonRequest, client *MatrixClient) (resultObj, *MatrixErrorDetails) {
