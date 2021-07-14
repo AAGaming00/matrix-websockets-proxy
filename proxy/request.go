@@ -234,7 +234,7 @@ func handleRedaction(req *jsonRequest, client *MatrixClient) (resultObj, *Matrix
 		}
 	}
 
-	event_id, err := client.SendRedaction(redactParams.Room_ID, redactParams.Event_Type, *req.ID,
+	event_id, err := client.SendRedaction(redactParams.Room_ID, *req.ID,
 		redactParams.Redacts)
 
 	if err != nil {

@@ -239,14 +239,13 @@ func (s *MatrixClient) SendReadMarkers(roomID string, content []byte) ([]byte, e
 }
 
 func (s *MatrixClient) SendRedaction(roomID string,
-	eventType string, txnID string, redacts string) (string, error) {
+	txnID string, redacts string) (string, error) {
 	type Response struct {
 		Event_ID string
 	}
 
-	path := fmt.Sprintf("_matrix/client/r0/rooms/%s/%s/%s/%s",
+	path := fmt.Sprintf("_matrix/client/r0/rooms/%s/redact/%s/%s",
 		url.QueryEscape(roomID),
-		eventType,
 		url.QueryEscape(redacts),
 		url.QueryEscape(txnID))
 
