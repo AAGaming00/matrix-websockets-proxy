@@ -195,6 +195,7 @@ func handleRedaction(req *jsonRequest, client *MatrixClient) (resultObj, *Matrix
 		Room_ID    string
 		Event_Type string
 		Redacts    string
+		Content    *json.RawMessage
 	}
 	type RedactResponse struct {
 		EventID string `json:"event_id"`
@@ -234,8 +235,15 @@ func handleRedaction(req *jsonRequest, client *MatrixClient) (resultObj, *Matrix
 		}
 	}
 
+	if redactParams.Content == nil {
+		return nil, &MatrixErrorDetails{
+			ErrCode: "M_BAD_JSON",
+			Error:   "Missing content",
+		}
+	}
+
 	event_id, err := client.SendRedaction(redactParams.Room_ID, *req.ID,
-		redactParams.Redacts)
+		redactParams.Redacts, *redactParams.Content)
 
 	if err != nil {
 		return nil, errorToResponse(err)
