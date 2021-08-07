@@ -28,7 +28,7 @@ jobs:
         with:
           push: true
           tags: aagaming/synapse-ws:latest
-          platforms: linux/amd64,linux/arm64,linux/armv7
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
       -
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
